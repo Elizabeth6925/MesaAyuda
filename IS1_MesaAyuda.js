@@ -72,6 +72,72 @@ async function scanDbTicket(clienteID) {
    return objectPromise;
 }
 
+/*----
+[TP] /api/resetClientePorContacto
+Permite resetear la password de un cliente identificado por su correo electrónico.
+*/
+app.post('/api/resetClientePorContacto', (req,res) => {
+   const {contacto}  = req.body;
+   const {passwordActual} = req.body; // NUEVO CAMPO
+   const {password}  = req.body;
+   const {password2} = req.body;
+   
+   if (!contacto) return res.status(400).send({response : "ERROR" , message: "Correo electrónico no informado"});
+   if (!passwordActual) return res.status(400).send({response : "ERROR" , message: "Contraseña actual no informada"});
+   if (!password) return res.status(400).send({response : "ERROR" , message: "Nueva password no informada"});
+   if (password !== password2) return res.status(400).send({response : "ERROR" , message: "Las nuevas passwords no coinciden"});
+
+   scanDbClientePorContacto(contacto)
+   .then(resultDb => {
+       if (Object.keys(resultDb).length == 0) {
+           return res.status(400).send({response : "ERROR" , message : "Cliente no existe"});
+       }
+       
+       const dataItem = resultDb[0];
+       const idCli = jsonParser('id',dataItem);
+       const passDb = jsonParser('password',dataItem); // Buscamos la pass actual en la BD
+       
+       // VERIFICAMOS QUE LA CONTRASEÑA ACTUAL SEA CORRECTA
+       if (passwordActual !== passDb) {
+           return res.status(400).send({response : "ERROR" , message : "La contraseña actual es incorrecta"});
+       }
+
+       var hoy = new Date();
+       var dd = String(hoy.getDate()).padStart(2, '0');
+       var mm = String(hoy.getMonth() + 1).padStart(2, '0');
+       var yyyy = hoy.getFullYear();
+       hoy = dd + '/' + mm + '/' + yyyy;
+
+       const paramsUpdate = {
+           ExpressionAttributeNames: {
+                "#p": "password",
+                "#f": "fecha_cambio_password"
+           },
+           ExpressionAttributeValues: {
+               ":p": password,
+               ":f": hoy
+          },
+          Key: {
+              "id": idCli
+          },
+          ReturnValues: "ALL_NEW",
+          TableName: "cliente",
+          UpdateExpression: "SET #p = :p, #f = :f"
+       };
+       
+       docClient.update(paramsUpdate, function (err, data) {
+           if (err)  {
+               return res.status(400).send(JSON.stringify({response : "ERROR", message : "DB access error "+err}));
+           } else {
+               return res.status(200).send(JSON.stringify({response : "OK", message : "Password actualizada"}));
+           }   
+       });   
+   })
+   .catch(err => {
+       res.status(400).send(JSON.stringify({response : "ERROR", message : "DB access error "+err}));
+   });
+});
+
 /*-------------------------------------------------------------------------------------------
                            SERVER API - CLIENTE
 *-------------------------------------------------------------------------------------------*/
@@ -83,6 +149,15 @@ app.get('/api/cliente', (req,res) => {
 app.post('/api/loginCliente', (req,res) => {
    const contacto = req.body.contacto || req.body.id; // Acepta contacto o id
    const {password} = req.body;
+
+ // ---- AGREGADO PARA VER EN LA TERMINAL ----
+   console.log("\n=========================================");
+   console.log("INTENTO DE LOGIN:");
+   console.log("Usuario (Contacto):", contacto);
+   console.log("Password:", password);
+   console.log("=========================================\n");
+   // ------------------------------------------
+
    
    if (!password) return res.status(400).send({response : "ERROR" , message : "Password no informada"});
    if (!contacto) return res.status(400).send({response : "ERROR" , message : "Correo electrónico no informado"});
@@ -102,6 +177,13 @@ app.post('/api/loginCliente', (req,res) => {
 
        if (password == paswd) {
            if (activo == true) {
+
+             // ---- AGREGADO PARA VER EN LA TERMINAL ----
+               console.log(">>> LOGIN EXITOSO <<<");
+               console.log("ID del usuario:", idCli);
+               console.log("Nombre:", nombre);
+               // ------------------------------------------
+               
                res.status(200).send(JSON.stringify({
                    response : "OK",
                    "id" : idCli,

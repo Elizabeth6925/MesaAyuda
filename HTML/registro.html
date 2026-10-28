@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<!--------------------------------------------------------------------------------------------------------------------------->
+<!-- registro.html                                                                                                         -->                                                                                                     
+<!-- Taller de maquetado - aplicación ejemplo Mesa de Ayuda                                                                -->                                                                                                     
+<!-- UADER - Ingeniería de Software I                                                                                      -->                                                                                                     
+<!--------------------------------------------------------------------------------------------------------------------------->
+<html Lang="en">
+   <head>
+       <meta charset="UTF-8">
+       <meta http-equiv="X-UA-Compatible" content="IE=edge">
+       <meta name="viewport" content="width=device-width,initial-scale=1.0">
+       <title>Registro - Mesa de Ayuda</title>
+       <style type="text/css">
+           label { font-size: 18px; }
+           form { width: 500px; border: 1px solid black; }
+           input { margin: 7px; padding: 2px; }
+           .form-label { margin-bottom:0!important; }    
+           .txt { display: inline-block; width: 80%; outline: none; margin:0; }
+       </style>
+   </head>
+<body>
+   <center><img src="HelpDeskGirl.png" alt="Nuestra imagen corporativa" style="width:200px;height:150px;"></center>
+   <center>
+       <h1>Sistema de Mesa de Ayuda</h1>
+       <h2>Registración de usuario</h2>
+   </center>
+   <center>
+   <form id="formRegistro" class="form" style="background-color:#d8f7cf" width="100px" border="1">
+       <br>
+       <table>
+           <tr style="height:10px;">
+               <td><label for="contacto" class="form-label">E-Mail</label></td>              
+           </tr>
+           <tr style="height:10px;">   
+               <td><input class="txt" id="contacto" name="contacto" type="email" placeholder="correo@ejemplo.com" required><br></td>
+           </tr>
+           <tr><td>&nbsp;</td></tr>
+           <tr style="height:10px;">
+               <td><label for="nombre" class="form-label">Nombre completo</label></td>              
+           </tr>
+           <tr style="height:10px;">   
+               <td><input class="txt" id="nombre" name="nombre" type="text" placeholder="Nombre y apellido" required><br></td>
+           </tr>
+           <tr><td>&nbsp;</td></tr>
+           <tr style="height:10px;">
+               <td><label for="password" class="form-label">Contraseña</label></td>              
+           </tr>
+           <tr>   
+               <td><input class="txt" id="password" name="password" type="password" placeholder="Contraseña" required><br></td>
+           </tr>
+           <tr><td>&nbsp;</td></tr>
+           <tr style="height:10px;">
+               <td><label for="password2" class="form-label">Repetir contraseña</label></td>              
+           </tr>
+           <tr>   
+               <td><input class="txt" id="password2" name="password2" type="password" placeholder="Repetir contraseña" required><br></td>
+           </tr>
+           <tr>
+               <td><input name="termscondition" type="checkbox" id="termscondition" required>
+                   Acepto los términos y condiciones (obligatorio)</td>
+           </tr>
+          
+           <!-- Contenedor del mensaje centrado -->
+           <tr><td><span id="resultado" style="text-align:center; display:block;"></span></td></tr>
+           <tr><td><br></td></tr>
+       </table>
+      
+       <button type="submit">< Registrarme</button>
+       <p></p>
+       <!-- El link se queda acá siempre -->
+       <center><a href="loginClient.html">Volver al login</a></center>
+       <p></p>
+   </form>
+   </center>
+   <script src="registro.js" type="module"></script>
+</body>
+</html>
+
+
+
