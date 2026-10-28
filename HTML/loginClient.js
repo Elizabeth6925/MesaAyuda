@@ -154,12 +154,14 @@ formE1.addEventListener('submit', (event) => {
 					'&mode=' + MODE;
 			} else {
 				// [TP] Login inválido retornado por el servidor
-				console.log('La password no es correcta / usuario inválido');
+				console.log('Error del servidor:', users.message);
 				document.getElementById('resultado1').style.color = 'RED';
 				document.getElementById('resultado1').style.textAlign = 'center';
-				document.getElementById('resultado1').textContent =
-					'Error de login, intente nuevamente';
+				
+				// ACÁ IMPRIMIMOS EL MENSAJE REAL QUE MANDA EL SERVIDOR
+				document.getElementById('resultado1').textContent = users.message || 'Error de login';
 			}
+			
 		})
 		.catch(err => {
 			console.log('Error en login: ' + err);

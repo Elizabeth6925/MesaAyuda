@@ -48,7 +48,7 @@ async function scanDbClientePorContacto(contacto) {
    const paramsScan = {
      TableName: "cliente",
      Select: "ALL_ATTRIBUTES",
-     FilterExpression : 'contacto = :contacto',
+     FilterExpression : 'contacto = :contacto OR contacto = :contacto',
      ExpressionAttributeValues : {':contacto' : contacto}
    };     
    var objectPromise = await docClientLocal.scan(paramsScan).promise().then((data) => {
