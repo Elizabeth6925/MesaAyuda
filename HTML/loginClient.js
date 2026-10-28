@@ -8,10 +8,7 @@ formE1.addEventListener('submit', (event) => {
 	const data = Object.fromEntries(formData);
 	console.log('Application Server: Revisa el valor del form:');
 	console.log(data);
-	/*---
-       Realiza validaciones en los datos del formulario antes de procesar
-       */
-	// [TP] Ahora se valida por "contacto" (e-mail) en lugar de "id"
+	
 	if (data.contacto == '' || data.password == '') {
 		console.log('debe indicar correo y password');
 		document.getElementById('resultado1').style.color = 'RED';
@@ -20,7 +17,7 @@ formE1.addEventListener('submit', (event) => {
 			'Debe informar correo electrónico y password para completar el acceso';
 		return;
 	}
-	// [TP] Verificación simple de formato de correo (contiene @)
+	
 	if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.contacto)) {
 		document.getElementById('resultado1').style.color = 'RED';
 		document.getElementById('resultado1').style.textAlign = 'center';
@@ -28,16 +25,16 @@ formE1.addEventListener('submit', (event) => {
 			'El correo electrónico informado no tiene formato válido';
 		return;
 	}
-	// [TP] Se conserva el fix de "pec" pero ahora sobre el correo
-	if (data.contacto == 'pec') {   /*--Fix hecho por  Germán Lombardi IS1-2025 */
+	
+	if (data.contacto == 'pec') {   
 		console.log('pec no es bienvenido en éste sistema');
-		const m = '<li>El usuario <pec> no es bienvenido en éste sistema</li>';
 		document.getElementById('resultado2').style.color = 'RED';
 		document.getElementById('resultado2').style.textAlign = 'center';
 		document.getElementById('resultado2').textContent =
 			'El usuario <pec> no es bienvenido en éste sistema';
 		return;
 	}
+	
 	if (data.termscondition != 'on') {
 		console.log('no aceptó los T&C no se puede loggear');
 		document.getElementById('resultado2').style.textAlign = 'center';
@@ -46,9 +43,7 @@ formE1.addEventListener('submit', (event) => {
 			'Debe aceptar los T&C para poder usar el sistema';
 		return;
 	}
-	/*---
-       Genera objeto HTML a ser actualizado en el tag identificado como "app"
-       */
+	
 	const HTMLResponse = document.querySelector('#app');
 	const ul = document.createElement('ul');
 	const tpl = document.createDocumentFragment();
@@ -60,15 +55,9 @@ formE1.addEventListener('submit', (event) => {
 		loginCliente: 'http://localhost:8080/api/loginCliente',
 		listarTicket: 'http://localhost:8080/api/listarTicket',
 	};
-/*-----
-   Define el URI para realizar el acceso en base al acceso a un servidor local
-*/
-   const MODE='LOCAL'; /*-- Instrucción a cambiar opciones LOCAL, TYPICODE o AWS --*/
+
+   const MODE='LOCAL'; 
 	if (MODE == 'LOCAL') {
-	/*-----
-       Crea estructuras para acceder a data del cliente
-       [TP] Se envía "contacto" en lugar de "id"
-       */
 	    const login = {
 	        contacto: data.contacto,
 		    password: data.password
@@ -87,64 +76,31 @@ formE1.addEventListener('submit', (event) => {
    	var API = RESTAPI.loginCliente;
 	    var APIoptions = options;
 	};
-	/*----------------------------------------------------------------------*/
-	/*---- Typicode utilizar id 803a62c8-78c8-4b63-9106-73af216d504b -------*/
-	/*                                                                      */
-	/* El siguiente código es utilizado para resolver la validación de      */
-	/* cliente utilizando un "fake" API REST server en Typicode             */
-	/* para realizar la validación con el REST API server correcto          */
-	/* deberá cambiar la instrucción para que                               */
-	/*              const tipycode=false;                                   */
-	/*----------------------------------------------------------------------*/
+	
 	if (MODE == 'TYPICODE') {
 		console.log('Acceso usando Typicode como application server');
-		API =
-			'https://my-json-server.typicode.com/lu7did/MesaAyuda/posts/' + data.contacto;
+		API = 'https://my-json-server.typicode.com/lu7did/MesaAyuda/posts/' + data.contacto;
 		APIoptions = { method: 'GET' };
 	}
-	/*----------------------------------------------------------------------*/
-	/*---- AWS Accede con URL de Lambda loginUserGET                 -------*/
-	/*                                                                      */
-	/* cliente: 803a62c8-78c8-4b63-9106-73af216d504b                        */
-	/*                                                                      */
-	/* Para activar el acceso mediante AWS hacer const aws=true;            */
-	/*----------------------------------------------------------------------*/
+	
 	if (MODE == 'AWS') {
 		console.log('Acceso usando AWS lambda como application server');
 		API='https://fmtj0jrpp9.execute-api.us-east-1.amazonaws.com/default/loginUserGET?ID=' + encodeURIComponent(data.contacto) + '&PASSWORD=' + encodeURIComponent(data.password);
    	APIoptions = { method: 'GET' };
 	}
-	/*-----
-   Realiza el acceso al API Rest utilizando gestión de sincronización mediante promesas
-	utiliza URL y options definidos en los pasos anteriores
-   */
+	
 	fetch(`${API}`, APIoptions)
 		.then((res) => {
 			return res.json();
 		})
 		.then((users) => {
-			console.log(
-				'Datos en respuesta del application server=' + JSON.stringify(users)
-			);
-			// [TP] El servidor retorna {response:"OK"|"invalido"} sin exponer la password
+			console.log('Datos en respuesta del application server=' + JSON.stringify(users));
+			
 			if (users.response == 'OK') {
 				console.log('La password es correcta');
-				console.log(
-					'nombre(' +
-						users.nombre +
-						') fecha_ultimo_ingreso(' +
-						users.fecha_ultimo_ingreso + ')' +
-						'mode(' + MODE + ')'
-				);
-				console.log(
-					'changing to ' +
-						systemURL.listarTicket +
-						'?id=' + users.id +
-						'&contacto=' + encodeURIComponent(users.contacto) +
-						'&nombre=' + encodeURIComponent(users.nombre) +
-						'&fecha_ultimo_ingreso=' + encodeURIComponent(users.fecha_ultimo_ingreso) +
-						'&mode=' + MODE
-				);
+				console.log('nombre(' + users.nombre + ') fecha_ultimo_ingreso(' + users.fecha_ultimo_ingreso + ')' + 'mode(' + MODE + ')');
+				
+				// Enviamos la fecha con hora por la URL
 				window.location.href =
 					systemURL.listarTicket +
 					'?id=' + users.id +
@@ -153,15 +109,11 @@ formE1.addEventListener('submit', (event) => {
 					'&fecha_ultimo_ingreso=' + encodeURIComponent(users.fecha_ultimo_ingreso) +
 					'&mode=' + MODE;
 			} else {
-				// [TP] Login inválido retornado por el servidor
 				console.log('Error del servidor:', users.message);
 				document.getElementById('resultado1').style.color = 'RED';
 				document.getElementById('resultado1').style.textAlign = 'center';
-				
-				// ACÁ IMPRIMIMOS EL MENSAJE REAL QUE MANDA EL SERVIDOR
 				document.getElementById('resultado1').textContent = users.message || 'Error de login';
 			}
-			
 		})
 		.catch(err => {
 			console.log('Error en login: ' + err);
@@ -171,4 +123,3 @@ formE1.addEventListener('submit', (event) => {
 				'Error de comunicación con el servidor';
 		});
 });
-

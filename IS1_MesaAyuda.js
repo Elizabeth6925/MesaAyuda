@@ -40,9 +40,9 @@ console.log("Servidor DB listo!");
 app.use(express.json());
 
 app.listen(PORT, () => {
-    
-    console.log(`Servidor escuchando conexiones en el puerto ${PORT}`);
-    console.log(` disponible en http://localhost:${PORT}/api/cliente`);
+   
+    console.log(`escuchando conexiones en el puerto ${PORT}`);
+    console.log(`disponible en http://localhost:${PORT}/api/cliente`);
    
 });
 
@@ -90,14 +90,12 @@ async function scanDbTicket(clienteID) {
 */
 app.post('/api/resetClientePorContacto', (req,res) => {
    const {contacto}  = req.body;
-   const {passwordActual} = req.body;
    const {password}  = req.body;
    const {password2} = req.body;
    
    console.log(`[RESET] Intento de reseteo para: ${contacto}`);
 
    if (!contacto) return res.status(400).send({response : "ERROR" , message: "Correo electrónico no informado"});
-   if (!passwordActual) return res.status(400).send({response : "ERROR" , message: "Contraseña actual no informada"});
    if (!password) return res.status(400).send({response : "ERROR" , message: "Nueva password no informada"});
    if (password !== password2) return res.status(400).send({response : "ERROR" , message: "Las nuevas passwords no coinciden"});
 
@@ -110,18 +108,9 @@ app.post('/api/resetClientePorContacto', (req,res) => {
        
        const dataItem = resultDb[0];
        const idCli = jsonParser('id',dataItem);
-       const passDb = jsonParser('password',dataItem);
        
-       if (passwordActual !== passDb) {
-           console.log(`[ERROR] Reset fallido: Contraseña actual incorrecta`);
-           return res.status(400).send({response : "ERROR" , message : "La contraseña actual es incorrecta"});
-       }
-
-       var hoy = new Date();
-       var dd = String(hoy.getDate()).padStart(2, '0');
-       var mm = String(hoy.getMonth() + 1).padStart(2, '0');
-       var yyyy = hoy.getFullYear();
-       hoy = dd + '/' + mm + '/' + yyyy;
+       // FECHA CON HORA ARGENTINA
+       var hoy = new Date().toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' });
 
        const paramsUpdate = {
            ExpressionAttributeNames: { "#p": "password", "#f": "fecha_cambio_password" },
@@ -183,17 +172,30 @@ app.post('/api/loginCliente', (req,res) => {
        const idCli   = jsonParser('id',dataItem);
        const contactoDb = jsonParser('contacto',dataItem);
        const nombre  = jsonParser('nombre',dataItem);
-       const fecha_ultimo_ingreso = jsonParser('fecha_ultimo_ingreso',dataItem);
 
        if (password == paswd) {
            if (activo == true) {
+               
+               // ACTUALIZAMOS FECHA DE ÚLTIMO INGRESO CON HORA
+               var fechaIngreso = new Date().toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' });
+               const paramsUpdate = {
+                   TableName: "cliente",
+                   Key: { "id": idCli },
+                   UpdateExpression: "SET #f = :f",
+                   ExpressionAttributeNames: { "#f": "fecha_ultimo_ingreso" },
+                   ExpressionAttributeValues: { ":f": fechaIngreso }
+               };
+               docClient.update(paramsUpdate, (err) => {
+                   if (err) console.log("[WARN] No se pudo actualizar último ingreso:", err);
+               });
+
                console.log(`[OK] Login exitoso: ${nombre} (${contactoDb})`);
                res.status(200).send(JSON.stringify({
                    response : "OK",
                    "id" : idCli,
                    "nombre" : nombre,
                    "contacto" : contactoDb,
-                   "fecha_ultimo_ingreso": fecha_ultimo_ingreso
+                   "fecha_ultimo_ingreso": fechaIngreso
                }));   
            } else {
                console.log(`[ERROR] Login fallido: El usuario ${contacto} no está activo`);
@@ -230,11 +232,8 @@ app.post('/api/addClienteRegistro', (req,res) => {
            return res.status(400).send({response : "ERROR" , message : "El usuario ya existe"});
        }
        
-       var hoy = new Date();
-       var dd = String(hoy.getDate()).padStart(2, '0');
-       var mm = String(hoy.getMonth() + 1).padStart(2, '0');
-       var yyyy = hoy.getFullYear();
-       hoy = dd + '/' + mm + '/' + yyyy;
+       // FECHA CON HORA ARGENTINA
+       var hoy = new Date().toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' });
        
        const newCliente = {
            id                    : crypto.randomUUID(),

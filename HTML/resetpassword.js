@@ -1,8 +1,8 @@
 /*---
 [TP] resetPassword.js
 Lógica de la pantalla de reset de contraseña.
-- Pide la contraseña actual y la nueva dos veces.
-- Verifica en cliente que las nuevas coincidan.
+- Pide dos veces la nueva password.
+- Verifica en cliente que coincidan.
 - Llama a /api/resetClientePorContacto del servidor.
 */
 const formReset = document.getElementById('formReset');
@@ -15,7 +15,7 @@ formReset.addEventListener('submit', (event) => {
    const resultado = document.getElementById('resultado');
    
    // Validaciones en el frontend (UX)
-   if (!data.contacto || !data.passwordActual || !data.password || !data.password2) {
+   if (!data.contacto || !data.password || !data.password2) {
        resultado.style.color = 'RED';
        resultado.textContent = 'Debe completar todos los campos';
        return;
@@ -36,7 +36,6 @@ formReset.addEventListener('submit', (event) => {
    // Armamos el objeto incluyendo la password actual
    const reset = {
        contacto  : data.contacto,
-       passwordActual : data.passwordActual,
        password  : data.password,
        password2 : data.password2
    };
