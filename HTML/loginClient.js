@@ -1,30 +1,35 @@
 const formE1 = document.querySelector('.form');
-
 /*---
-    Intercepta el submit del formulario
-    */
-
+   Intercepta el submit del formulario
+   */
 formE1.addEventListener('submit', (event) => {
 	event.preventDefault();
 	const formData = new FormData(formE1);
 	const data = Object.fromEntries(formData);
 	console.log('Application Server: Revisa el valor del form:');
 	console.log(data);
-
 	/*---
-        Realiza validaciones en los datos del formulario antes de procesar
-        */
-
-	if (data.id == '' || data.password == '') {
-		console.log('debe indicar usuario');
+       Realiza validaciones en los datos del formulario antes de procesar
+       */
+	// [TP] Ahora se valida por "contacto" (e-mail) en lugar de "id"
+	if (data.contacto == '' || data.password == '') {
+		console.log('debe indicar correo y password');
 		document.getElementById('resultado1').style.color = 'RED';
 		document.getElementById('resultado1').style.textAlign = 'center';
 		document.getElementById('resultado1').textContent =
-			'Debe informar usuario y password para  completar el acceso';
+			'Debe informar correo electrónico y password para completar el acceso';
 		return;
 	}
-
-	if (data.id == 'pec') {   /*--Fix hecho por  Germán Lombardi IS1-2025 */
+	// [TP] Verificación simple de formato de correo (contiene @)
+	if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.contacto)) {
+		document.getElementById('resultado1').style.color = 'RED';
+		document.getElementById('resultado1').style.textAlign = 'center';
+		document.getElementById('resultado1').textContent =
+			'El correo electrónico informado no tiene formato válido';
+		return;
+	}
+	// [TP] Se conserva el fix de "pec" pero ahora sobre el correo
+	if (data.contacto == 'pec') {   /*--Fix hecho por  Germán Lombardi IS1-2025 */
 		console.log('pec no es bienvenido en éste sistema');
 		const m = '<li>El usuario <pec> no es bienvenido en éste sistema</li>';
 		document.getElementById('resultado2').style.color = 'RED';
@@ -41,40 +46,33 @@ formE1.addEventListener('submit', (event) => {
 			'Debe aceptar los T&C para poder usar el sistema';
 		return;
 	}
-
 	/*---
-        Genera objeto HTML a ser actualizado en el tag identificado como "app"
-        */
-
+       Genera objeto HTML a ser actualizado en el tag identificado como "app"
+       */
 	const HTMLResponse = document.querySelector('#app');
 	const ul = document.createElement('ul');
-
 	const tpl = document.createDocumentFragment();
-
 	const systemURL = {
 		listarTicket: 'http://127.0.0.1:5500/HTML/listarTicket.html',
 		loginCliente: 'http://127.0.0.1:5500/HTML/loginClient.html',
 	};
-
 	const RESTAPI = {
 		loginCliente: 'http://localhost:8080/api/loginCliente',
 		listarTicket: 'http://localhost:8080/api/listarTicket',
 	};
-
 /*-----
-    Define el URI para realizar el acceso en base al acceso a un servidor local
+   Define el URI para realizar el acceso en base al acceso a un servidor local
 */
-    const MODE='LOCAL'; /*-- Instrucción a cambiar opciones LOCAL, TYPICODE o AWS --*/
-
+   const MODE='LOCAL'; /*-- Instrucción a cambiar opciones LOCAL, TYPICODE o AWS --*/
 	if (MODE == 'LOCAL') {
 	/*-----
-        Crea estructuras para acceder a data del cliente
-        */
+       Crea estructuras para acceder a data del cliente
+       [TP] Se envía "contacto" en lugar de "id"
+       */
 	    const login = {
-	        id: data.id,
+	        contacto: data.contacto,
 		    password: data.password
 		}	
-
 		const options = {
 			method: 'POST',
 			headers: {
@@ -82,19 +80,13 @@ formE1.addEventListener('submit', (event) => {
 			},
 			body: JSON.stringify(login),
 	};
-
-
-
 	 	console.log('API REST:' + RESTAPI.loginCliente);
 	    console.log(login);
 	    console.log('login(' + JSON.stringify(login) + ')');
 	    console.log('options ' + JSON.stringify(options));
-    	var API = RESTAPI.loginCliente;
+   	var API = RESTAPI.loginCliente;
 	    var APIoptions = options;
-
 	};
-
-
 	/*----------------------------------------------------------------------*/
 	/*---- Typicode utilizar id 803a62c8-78c8-4b63-9106-73af216d504b -------*/
 	/*                                                                      */
@@ -104,15 +96,12 @@ formE1.addEventListener('submit', (event) => {
 	/* deberá cambiar la instrucción para que                               */
 	/*              const tipycode=false;                                   */
 	/*----------------------------------------------------------------------*/
-
-
 	if (MODE == 'TYPICODE') {
 		console.log('Acceso usando Typicode como application server');
 		API =
-			'https://my-json-server.typicode.com/lu7did/MesaAyuda/posts/' + data.id;
+			'https://my-json-server.typicode.com/lu7did/MesaAyuda/posts/' + data.contacto;
 		APIoptions = { method: 'GET' };
 	}
-
 	/*----------------------------------------------------------------------*/
 	/*---- AWS Accede con URL de Lambda loginUserGET                 -------*/
 	/*                                                                      */
@@ -122,14 +111,13 @@ formE1.addEventListener('submit', (event) => {
 	/*----------------------------------------------------------------------*/
 	if (MODE == 'AWS') {
 		console.log('Acceso usando AWS lambda como application server');
-		API='https://fmtj0jrpp9.execute-api.us-east-1.amazonaws.com/default/loginUserGET?ID=' + data.id + '&PASSWORD=' + data.password;
-    	APIoptions = { method: 'GET' };
+		API='https://fmtj0jrpp9.execute-api.us-east-1.amazonaws.com/default/loginUserGET?ID=' + encodeURIComponent(data.contacto) + '&PASSWORD=' + encodeURIComponent(data.password);
+   	APIoptions = { method: 'GET' };
 	}
 	/*-----
-    Realiza el acceso al API Rest utilizando gestión de sincronización mediante promesas
+   Realiza el acceso al API Rest utilizando gestión de sincronización mediante promesas
 	utiliza URL y options definidos en los pasos anteriores
-    */
-
+   */
 	fetch(`${API}`, APIoptions)
 		.then((res) => {
 			return res.json();
@@ -138,55 +126,47 @@ formE1.addEventListener('submit', (event) => {
 			console.log(
 				'Datos en respuesta del application server=' + JSON.stringify(users)
 			);
-			console.log('users.response=' + users.password);
+			// [TP] El servidor retorna {response:"OK"|"invalido"} sin exponer la password
 			if (users.response == 'OK') {
-				//<==Habilitar esto para dejar que el API REST verifique sin exponer la password
 				console.log('La password es correcta');
 				console.log(
 					'nombre(' +
 						users.nombre +
 						') fecha_ultimo_ingreso(' +
-						users.fecha_ultimo_ingreso +
-						')' +
+						users.fecha_ultimo_ingreso + ')' +
 						'mode(' + MODE + ')'
-				);
-				console.log(
-					'id=' +
-						users.id +
-						' nombre=' +
-						users.nombre +
-						' ultimo=' +
-						users.fecha_ultimo_ingreso
 				);
 				console.log(
 					'changing to ' +
 						systemURL.listarTicket +
-						'?id=' +
-						users.id +
-						'&contacto=' +
-						users.contacto +
-						'&nombre=' +
-						users.nombre +
-						'&fecha_ultimo_ingreso=' +
-						users.fecha_ultimo_ingreso +
+						'?id=' + users.id +
+						'&contacto=' + encodeURIComponent(users.contacto) +
+						'&nombre=' + encodeURIComponent(users.nombre) +
+						'&fecha_ultimo_ingreso=' + encodeURIComponent(users.fecha_ultimo_ingreso) +
 						'&mode=' + MODE
 				);
 				window.location.href =
 					systemURL.listarTicket +
-					'?id=' +
-					users.id +
-					'&contacto=' +
-					users.contacto +
-					'&nombre=' +
-					users.nombre +
-					'&fecha_ultimo_ingreso=' +
-					users.fecha_ultimo_ingreso +
+					'?id=' + users.id +
+					'&contacto=' + encodeURIComponent(users.contacto) +
+					'&nombre=' + encodeURIComponent(users.nombre) +
+					'&fecha_ultimo_ingreso=' + encodeURIComponent(users.fecha_ultimo_ingreso) +
 					'&mode=' + MODE;
 			} else {
-				console.log('La password no es correcta');
-				document.getElementById('resultado1').style.color = 'RED'; /*--Fix hecho por  Germán Lombardi IS1-2025 */
+				// [TP] Login inválido retornado por el servidor
+				console.log('La password no es correcta / usuario inválido');
+				document.getElementById('resultado1').style.color = 'RED';
+				document.getElementById('resultado1').style.textAlign = 'center';
 				document.getElementById('resultado1').textContent =
-					'Error de login, intente nuevamente';                  /*--Fix hecho por  Germán Lombardi IS1-2025 */
+					'Error de login, intente nuevamente';
 			}
+		})
+		.catch(err => {
+			console.log('Error en login: ' + err);
+			document.getElementById('resultado1').style.color = 'RED';
+			document.getElementById('resultado1').style.textAlign = 'center';
+			document.getElementById('resultado1').textContent =
+				'Error de comunicación con el servidor';
 		});
 });
+
