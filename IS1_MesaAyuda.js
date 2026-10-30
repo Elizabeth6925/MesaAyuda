@@ -282,7 +282,8 @@ app.post('/api/listarTicket', (req,res) => {
    .then(resultDb => {
      if (Object.keys(resultDb).length == 0) {
        console.log(`[WARN] El cliente ${ID} no tiene tickets`);
-       res.status(400).send({response : "ERROR" , message : "clienteID no tiene tickets"});
+       // Si no hay tickets, devolvemos un 200 OK con el array vacío para que el frontend muestre "No hay tickets pendientes" sin dar error
+       res.status(200).send(JSON.stringify({response : "OK", "data": []}));
      } else {
        console.log(`[OK] Se encontraron ${resultDb.length} tickets`);
        res.status(200).send(JSON.stringify({response : "OK",  "data": resultDb}));
