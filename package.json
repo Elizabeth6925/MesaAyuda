@@ -1,6 +1,5 @@
 {
   "name": "mesaayuda",
-  "type": "module",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
@@ -10,10 +9,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "aws-sdk": "^2.1693.0",
+    "aws-sdk": "^2.1692.0",
     "axios": "^1.11.0",
-    "cors": "^2.8.6",
-    "crypto": "^1.0.1",
+    "cors": "^2.8.5",
     "express": "^5.1.0"
   },
   "description": ""
